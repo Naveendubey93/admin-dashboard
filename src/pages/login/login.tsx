@@ -28,14 +28,14 @@ const LoginPage = () => {
     enabled: false,
   })
 
-const {mutate: logoutMutate } = useMutation({
-  mutationKey: ['logout'],
-  mutationFn: logout,
-  onSuccess: async () => {
-    logoutFromStore();
-    return;
-  }
-});
+  const {mutate: logoutMutate } = useMutation({
+    mutationKey: ['logout'],
+    mutationFn: logout,
+    onSuccess: async () => {
+      logoutFromStore();
+      return;
+    }
+  });
 
   const { mutate, isPending, isError, error } = useMutation({
     mutationKey: ['login'],
@@ -93,7 +93,7 @@ const {mutate: logoutMutate } = useMutation({
           <Form.Item name='remember' valuePropName='checked'>
             <Checkbox>Remember Me</Checkbox>
           </Form.Item>
-            <a href='' id='login-form-forgot'>Forgot password</a>
+            <a href='#' id='login-form-forgot'>Forgot password</a>
           </Flex>
       <Form.Item>
         
