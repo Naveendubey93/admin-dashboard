@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getUsers } from '../../http/api';
 import { User } from '../../types';
 import { useAuthStore } from '../../store';
+import UsersFilter from './UsersFilter';
 
 const columns = [
   {
@@ -71,10 +72,12 @@ export const Users = () => {
       {isLoading && <div>Loading...</div>}
       {isError && <div>{error?.message || 'An error occurred'}</div>}
 
-      {/* Only render the Table when users is a valid array */}
+      <UsersFilter onFilterChange={(filterName, filterValue) => {
+        console.log({ filterName, filterValue });
+      }}/>
       <Table
         columns={columns}
-        dataSource={Array.isArray(users) ? users : []}  // Ensure users is an array
+        dataSource={Array.isArray(users) ? users : []}  
         rowKey="id" // Ensure there's a unique key for each row
       />
     </Space>
