@@ -13,35 +13,49 @@ import BasketIcon from '../components/icons/BasketIcon';
 import GiftIcon from '../components/icons/GiftIcon';
 import { useMutation } from '@tanstack/react-query';
 import { logout } from '../http/api';
-const items= [
-  {
-    key: '/',
-    icon: <Icon component={Home}/> ,
-    label: <NavLink to="/">Home</NavLink>,
-  },
-  {
-    key: '/users',
-    icon: <UserOutlined/>,
-    label: <NavLink to="/users">User</NavLink>,
-  },
-  {
-    key: '/restaurants',
-    icon: <Icon component={foodIcon}/>,
-    label: <NavLink to="/restaurants">Restaurants</NavLink>,
-  },
-  {
-    key: '/products',
-    icon: <Icon component={BasketIcon}/>,
-    label: <NavLink to="/products">Home</NavLink>,
-  },
-    {
-    key: '/promos',
-    icon: <Icon component={GiftIcon}/>,
-    label: <NavLink to="/promos">Home</NavLink>,
-  },
 
-];
+const getMeuItems = (role: string) => {
+
+  const baseItems= [
+    {
+      key: '/',
+      icon: <Icon component={Home}/> ,
+      label: <NavLink to="/">Home</NavLink>,
+    },
+    {
+      key: '/restaurants',
+      icon: <Icon component={foodIcon}/>,
+      label: <NavLink to="/restaurants">Restaurants</NavLink>,
+    },
+    {
+      key: '/products',
+      icon: <Icon component={BasketIcon}/>,
+      label: <NavLink to="/products">Products</NavLink>,
+    },
+      {
+      key: '/promos',
+      icon: <Icon component={GiftIcon}/>,
+      label: <NavLink to="/promos">Promos</NavLink>,
+    },
+
+  ];
+
+  if(role=== 'admin') {
+    const menus = [...baseItems];
+    menus.splice(1, 0,
+      {
+        key: '/users',
+        icon: <UserOutlined/>,
+        label: <NavLink to="/users">User</NavLink>,
+      });
+      return menus;
+  } 
+
+  return baseItems;
+};
+
 const Dashboard = () => {
+
   const { logout: logoutFromStore} = useAuthStore();
   const {mutate: logoutMutate } = useMutation({
   mutationKey: ['logout'],
@@ -61,6 +75,8 @@ const { user } = useAuthStore();
 if(!user) {
   return <Navigate to="/auth/login" replace={true} />;
 }
+  const items = getMeuItems(user.role );
+
 
   return (
     <div>
