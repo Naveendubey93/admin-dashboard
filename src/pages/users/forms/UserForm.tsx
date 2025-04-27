@@ -37,7 +37,7 @@ const UserForm = () => {
                 </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please input your email!' }]}>
+                  <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Email is required!' }, { type: 'email', message: 'Please enter a valid email!' }]}>
                     <Input size='large'/>
                   </Form.Item>
                 </Col>
