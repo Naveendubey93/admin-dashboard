@@ -1,12 +1,14 @@
-import { Breadcrumb, Button, Drawer, Space, Table } from 'antd';
+import { Breadcrumb, Button, Drawer, Space, Table, theme } from 'antd';
 import { PlusOutlined, RightOutlined } from '@ant-design/icons';
-import { Link, Navigate } from 'react-router-dom';
+import {  Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getUsers } from '../../http/api';
 import { User } from '../../types';
 import { useAuthStore } from '../../store';
 import UsersFilter from './UsersFilter';
 import React from 'react';
+import UserForm from './forms/UserForm';
+import Form from 'antd/es/form/Form';
 
 const columns = [
   {
@@ -42,6 +44,7 @@ const columns = [
 ];
 
 export const Users = () => {
+  const { token : { colorBgLayout } } = theme.useToken();
   const [ drawerOpen, setDrawerOpen] = React.useState(false);
   const { data: users, isLoading, isError, error } = useQuery({
     queryKey: ['users'],
@@ -89,6 +92,7 @@ export const Users = () => {
       />
       <Drawer
         title="Create user" width={720} destroyOnClose={true}
+        styles={{ body: { background: colorBgLayout } }}
         open={drawerOpen} onClose={() => {
             setDrawerOpen(false)        }}
         extra={
@@ -99,9 +103,9 @@ export const Users = () => {
           </Space>
 
         }>
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-
+        <Form layout='vertical'>
+          <UserForm />
+        </Form>
       </Drawer>
     </Space>
   );
