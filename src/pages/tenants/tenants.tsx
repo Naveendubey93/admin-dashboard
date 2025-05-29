@@ -1,12 +1,13 @@
-import { Breadcrumb, Button, Drawer, Space, Table } from 'antd';
+import { Breadcrumb, Button, Drawer, Space, Table, Form } from 'antd';
 import { PlusOutlined, RightOutlined } from '@ant-design/icons';
 import React from 'react';
 import TenantsFilter from  './TenantsFilter';
-import { getTenants } from '../../http/api';
+import { createTenant, getTenants } from '../../http/api';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store';
-import { useQuery } from '@tanstack/react-query';
-
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import TenantForm from './forms/TenantForm';
+import { CreateTenantData } from '../../types';
 
 const columns= [
   {
@@ -28,7 +29,12 @@ const columns= [
 
 
 
+
+
+
 const Tenants = () => {
+    const [ form ]   =  Form.useForm();
+  
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const {
     data: tenants,
@@ -48,7 +54,27 @@ const Tenants = () => {
         });
     },
   });
-  const { user } = useAuthStore();
+
+const { user } = useAuthStore();
+
+const queryClient = useQueryClient();
+const { mutate: tenantMutate } = useMutation({
+  mutationKey: ['tenant'],
+  mutationFn: (data: CreateTenantData) => createTenant(data).then((res) => res.data),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['tenants'] });
+    setDrawerOpen(false);
+  },
+})
+
+const onHandleSubmit = () => {
+console.log('Form submitted', form.getFieldsValue());
+form.validateFields();
+tenantMutate(form.getFieldsValue());
+console.log('Form values:', form.getFieldsValue());
+form.resetFields();
+
+}
 
   if(user?.role !== 'admin') {
     return <Navigate to='/' />;
@@ -78,12 +104,16 @@ const Tenants = () => {
 
       <Drawer title="Create Restaurant" width={720} destroyOnClose={true} placement="right" onClose={() => setDrawerOpen(false)} open={drawerOpen} extra={<Space>
         <Button>Cancel</Button>
-        <Button type="primary">Submit</Button>
+        <Button onClick={onHandleSubmit} type="primary">Submit</Button>
       </Space>}>
-        <p>Form content goes here</p>
+        {/* <p>Form content goes here</p> */}
+        <Form layout='vertical' style={{ width: '100%' }}  form={form}>
+          <TenantForm/>
+        </Form>
       </Drawer>
     </><Table /></>
   )
 }
 
 export default Tenants
+            // <Button onClick={onHandleSubmit} type='primary' icon={<PlusOutlined/>}

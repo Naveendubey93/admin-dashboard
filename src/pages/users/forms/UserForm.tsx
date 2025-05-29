@@ -27,12 +27,12 @@ const UserForm = () => {
           <Card title="Basic Information" bordered={false}>
             <Row gutter={20}>
               <Col span={12}>
-                <Form.Item label="First Name" name="firstName" rules={[{ required: true, message: 'Please input your first name!' }]}> 
+                <Form.Item label="First Name" name="firstName" rules={[{ required: true, message: 'Please input your first name!' }]}>
                   <Input size='large'/>
-                </Form.Item>  
+                </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Last Name" name="lastName" rules={[{ required: true, message: 'Please input your last name!' }]}> 
+                <Form.Item label="Last Name" name="lastName" rules={[{ required: true, message: 'Please input your last name!' }]}>
                   <Input size='large'/>
                 </Form.Item>
                 </Col>
