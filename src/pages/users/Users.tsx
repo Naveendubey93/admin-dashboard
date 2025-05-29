@@ -3,7 +3,7 @@ import { LoadingOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons'
 import {  Link, Navigate } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createUser, getUsers } from '../../http/api';
-import { CreateUserData, FieldData } from '../../types';
+import { CreateUserData, FieldData, User } from '../../types';
 import { useAuthStore } from '../../store';
 import UsersFilter from './UsersFilter';
 import React from 'react';
@@ -21,11 +21,6 @@ const columns = [
     title: 'First Name',
     dataIndex: 'firstName',
     key: 'firstName',
-    // render: (_text: string, record: User) => {
-    //   // Safeguard against undefined record
-    //   if (!record) return null;
-    //   return <div>{record.firstName} {record.lastName}</div>;
-    // }
   },
   {
     title: 'Last Name',
@@ -42,14 +37,14 @@ const columns = [
     dataIndex: 'role',
     key: 'role',
   },
-  // {
-  //   title: 'Restaurant',
-  //   dataIndex: 'tenant',
-  //   key: 'tenant',
-  //   render: (_text: string, record: User) => {
-  //     return <div>{record.tenant?.name}</div>;
-  //   }
-  // }
+  {
+    title: 'Restaurant',
+    dataIndex: 'tenant',
+    key: 'tenant',
+    render: (_text: string, record: User) => {
+      return <div>{record.tenant?.name}</div>;
+    }
+  }
 ];
 
 export const Users = () => {
