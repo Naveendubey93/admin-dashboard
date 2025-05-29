@@ -9,6 +9,7 @@ import UsersFilter from './UsersFilter';
 import React from 'react';
 import UserForm from './forms/UserForm';
 import {  PER_PAGE } from '../constants';
+import { debounce } from 'lodash';
 
 const columns = [
   {
@@ -57,7 +58,12 @@ export const Users = () => {
   const queryClient = useQueryClient();
   const { token : { colorBgLayout } } = theme.useToken();
 
-  const [queryParams, setQueryParams] = React.useState({
+  const [queryParams, setQueryParams] = React.useState<{
+    perPage: number;
+    currentPage: number;
+    q?: string;
+    role?: string;
+  }>({
     perPage: PER_PAGE,
     currentPage: 1,
     q: undefined,
@@ -113,6 +119,12 @@ const CreateUser = async(credential: CreateUserData) => {
       setDrawerOpen(false); // Close the drawer after submission
   }
 
+  const debounceQUpdate = React.useMemo(() => {
+    return debounce((value: string | undefined) => {
+      setQueryParams((prev) => ({ ...prev, q: value}));
+  },1000);
+  }, []);
+
   const onFIlterChange = (changedValue: FieldData[]) => {
     // const values = filterForm.getFieldsValue();
     console.log("Filter Values: ", changedValue);  // Log the filter values here
@@ -123,11 +135,14 @@ const CreateUser = async(credential: CreateUserData) => {
       return acc;
     }, {} as Record<string, unknown>);
     console.log("Changed Filter Fields: ", changedFilterFileds);  // Log the changed filter fields here
+   if('q' in changedFilterFileds) {
+      debounceQUpdate(changedFilterFileds.q as string | undefined);
+    } else {
     setQueryParams(prev => ({
       ...prev,
       ...changedFilterFileds
-      // currentPage: 1, // Reset to the first page when filters change
     }));
+    }
   };
 
 
