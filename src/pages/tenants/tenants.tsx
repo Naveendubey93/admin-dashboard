@@ -160,6 +160,7 @@ const Tenants = () => {
               perPage: pageSize,
             }));
           },
+          showTotal: (total, range: number[]) => `Showing ${range[0]} - ${range[1]} of Total ${total} Items`,
         }}
       />
 

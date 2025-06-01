@@ -175,7 +175,7 @@ const CreateUser = async(credential: CreateUserData) => {
           total: users?.count, // Ensure this is the correct path to your total count
           // showSizeChanger: true,
             onChange: (page) => setQueryParams(prev => ({ ...prev, currentPage: page })),
-
+            showTotal: (total, range: number[]) => `Showing ${range[0]} - ${range[1]} of Total ${total} users`,
         }}
 
       />
