@@ -75,7 +75,6 @@ export const Users = () => {
      const queryString = new URLSearchParams(filterdParams as  unknown as Record<string, string>).toString();
       return getUsers(queryString)
         .then((res) => {
-          console.log("API Response: ", res?.data);  // Log the response here
           return res.data;
         })
         .catch((error) => {
@@ -116,8 +115,8 @@ const CreateUser = async(credential: CreateUserData) => {
 
   const debounceQUpdate = React.useMemo(() => {
     return debounce((value: string | undefined) => {
-      setQueryParams((prev) => ({ ...prev, q: value}));
-  },1000);
+      setQueryParams((prev) => ({ ...prev, q: value, currentPage: 1 }));
+  },500);
   }, []);
 
   const onFIlterChange = (changedValue: FieldData[]) => {
@@ -152,7 +151,6 @@ const CreateUser = async(credential: CreateUserData) => {
           separator={<RightOutlined />}
           items={[{ title: <Link to='/'>Dashboard</Link> }, { title: 'Users' }]}
         />
-
         {isFetching && <div>  <Spin indicator={<LoadingOutlined style={{fontSize:24}} spin  />} size="small" /></div>}
         {isError && <div>{error?.message || 'An error occurred'}</div>}
       </Flex>

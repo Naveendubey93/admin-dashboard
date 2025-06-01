@@ -1,119 +1,190 @@
 import { Breadcrumb, Button, Drawer, Space, Table, Form } from 'antd';
 import { PlusOutlined, RightOutlined } from '@ant-design/icons';
 import React from 'react';
-import TenantsFilter from  './TenantsFilter';
+import TenantsFilter from './TenantsFilter';
 import { createTenant, getTenants } from '../../http/api';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import TenantForm from './forms/TenantForm';
-import { CreateTenantData } from '../../types';
+import { CreateTenantData, FieldData } from '../../types';
+import { debounce } from 'lodash';
+import { PER_PAGE } from '../constants';
 
-const columns= [
-  {
-    title: 'Id',
-    dataIndex: 'id',
-    key: 'id',
-  },
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-    key: 'address',
-  }
-];
-
-
-
-
-
-
+// Main Component
 const Tenants = () => {
-    const [ form ]   =  Form.useForm();
-  
+  const [form] = Form.useForm();
+  const [TenantFilterForm] = Form.useForm();
+  const queryClient = useQueryClient();
+
+  const [queryParams, setQueryParams] = React.useState<{
+    perPage: number;
+    currentPage: number;
+    q?: string;
+  }>({
+    perPage: PER_PAGE,
+    currentPage: 1,
+    q: '',
+  });
+
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const { user } = useAuthStore();
+
   const {
     data: tenants,
     isLoading,
     isError,
-    error
+    error,
   } = useQuery({
-    queryKey: ['tenants'],
+    queryKey: ['tenants', queryParams],
     queryFn: () => {
-      return getTenants()
-        .then((res) => {
-         return res.data?.data;       // Fix here if data is wrapped
-        })
+      const filterdParams = Object.fromEntries(Object.entries(queryParams).filter((Item) => !!Item[1]));
+      const queryString = new URLSearchParams(
+        filterdParams as unknown as Record<string, string>
+      ).toString();
+      return getTenants(queryString)
+        .then((res) => res.data)
         .catch((error) => {
-          console.error("Error fetching tenants: ", error);
-          throw error;  // Re-throw the error so that `isError` can be set to true
+          console.error('Error fetching tenants: ', error);
+          throw error;
         });
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const { mutate: tenantMutate } = useMutation({
+    mutationKey: ['tenant'],
+    mutationFn: (data: CreateTenantData) => createTenant(data).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      setDrawerOpen(false);
     },
   });
 
-const { user } = useAuthStore();
+  const onHandleSubmit = async () => {
+    await form.validateFields();
+    tenantMutate(form.getFieldsValue());
+    form.resetFields();
+  };
 
-const queryClient = useQueryClient();
-const { mutate: tenantMutate } = useMutation({
-  mutationKey: ['tenant'],
-  mutationFn: (data: CreateTenantData) => createTenant(data).then((res) => res.data),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['tenants'] });
-    setDrawerOpen(false);
-  },
-})
+  const debounceQueryParams = React.useMemo(() => {
+    return debounce((value: string | undefined) => {
+      setQueryParams((prev) => ({ ...prev, q: value, currentPage: 1 }));
+    }, 500);
+  }, []);
 
-const onHandleSubmit = () => {
-console.log('Form submitted', form.getFieldsValue());
-form.validateFields();
-tenantMutate(form.getFieldsValue());
-console.log('Form values:', form.getFieldsValue());
-form.resetFields();
+  const onFIlterChange = (changedValue: FieldData[]) => {
+    const changedFilterFileds = changedValue.reduce((acc: Record<string, unknown>, field) => {
+      if (field.value !== undefined && field.value !== null) {
+        acc[field.name] = field.value;
+      }
+      return acc;
+    }, {});
 
-}
+    if ('q' in changedFilterFileds) {
+      debounceQueryParams(changedFilterFileds.q as string | undefined);
+    } else {
+      setQueryParams((prev) => ({
+        ...prev,
+        ...changedFilterFileds,
+      }));
+    }
+  };
 
-  if(user?.role !== 'admin') {
-    return <Navigate to='/' />;
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" />;
   }
+
+  const columns = [
+    {
+      title: 'S.No',
+      key: 'index',
+      render: (_: unknown, __: unknown, index: number) =>
+        (queryParams.currentPage - 1) * queryParams.perPage + index + 1,
+    },
+    // {
+    //   title: 'Id',
+    //   dataIndex: 'id',
+    //   key: 'id',
+    // },
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Address',
+      dataIndex: 'address',
+      key: 'address',
+    },
+  ];
+
   return (
-    <><>
-      <Breadcrumb separator={<RightOutlined />}
+    <>
+      <Breadcrumb
+        separator={<RightOutlined />}
         items={[
           {
-            title: <Link to='/dashboard'>Dashboard</Link>,
+            title: <Link to="/dashboard">Dashboard</Link>,
           },
           {
             title: 'Tenants',
-          }
-        ]} />
+          },
+        ]}
+      />
+
       {isLoading && <div>Loading...</div>}
       {isError && <div>Error: {error.message}</div>}
 
-      <TenantsFilter onFilterChange={(filterName: string, filterValue: string) => {
-        console.log({ filterName, filterValue });
-      } }>
-        <Button type='primary' icon={<PlusOutlined />}
-          onClick={() => setDrawerOpen(true)}
-        >Add Tenant</Button>
-      </TenantsFilter>
-      <Table columns={columns} dataSource={tenants} loading={isLoading} rowKey="id" />
+      <Form form={TenantFilterForm} onFieldsChange={onFIlterChange}>
+        <TenantsFilter>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
+            Add Tenant
+          </Button>
+        </TenantsFilter>
+      </Form>
 
-      <Drawer title="Create Restaurant" width={720} destroyOnClose={true} placement="right" onClose={() => setDrawerOpen(false)} open={drawerOpen} extra={<Space>
-        <Button>Cancel</Button>
-        <Button onClick={onHandleSubmit} type="primary">Submit</Button>
-      </Space>}>
-        {/* <p>Form content goes here</p> */}
-        <Form layout='vertical' style={{ width: '100%' }}  form={form}>
-          <TenantForm/>
+      <Table
+        columns={columns}
+        dataSource={tenants?.data || []}
+        loading={isLoading}
+        rowKey="id"
+        pagination={{
+          pageSize: queryParams.perPage,
+          current: queryParams.currentPage,
+          total: tenants?.count,
+          onChange: (page, pageSize) => {
+            setQueryParams((prev) => ({
+              ...prev,
+              currentPage: page,
+              perPage: pageSize,
+            }));
+          },
+        }}
+      />
+
+      <Drawer
+        title="Create Tenant"
+        width={720}
+        destroyOnClose={true}
+        placement="right"
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+        extra={
+          <Space>
+            <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
+            <Button onClick={onHandleSubmit} type="primary">
+              Submit
+            </Button>
+          </Space>
+        }
+      >
+        <Form layout="vertical" form={form}>
+          <TenantForm />
         </Form>
       </Drawer>
-    </><Table /></>
-  )
-}
+    </>
+  );
+};
 
-export default Tenants
-            // <Button onClick={onHandleSubmit} type='primary' icon={<PlusOutlined/>}
+export default Tenants;
