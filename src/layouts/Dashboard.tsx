@@ -23,11 +23,6 @@ const getMeuItems = (role: string) => {
       label: <NavLink to="/">Home</NavLink>,
     },
     {
-      key: '/restaurants',
-      icon: <Icon component={foodIcon}/>,
-      label: <NavLink to="/restaurants">Restaurants</NavLink>,
-    },
-    {
       key: '/products',
       icon: <Icon component={BasketIcon}/>,
       label: <NavLink to="/products">Products</NavLink>,
@@ -47,6 +42,12 @@ const getMeuItems = (role: string) => {
         key: '/users',
         icon: <UserOutlined/>,
         label: <NavLink to="/users">User</NavLink>,
+      });
+      menus.splice(2, 0,
+      {
+        key: '/restaurants',
+        icon: <Icon component={foodIcon}/>,
+        label: <NavLink to="/restaurants">Restaurants</NavLink>,
       });
       return menus;
   }
