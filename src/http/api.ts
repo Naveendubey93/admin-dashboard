@@ -9,4 +9,5 @@ export const logout = async () => await api.post('/auth/logout');
 export const getUsers = async (queryString: string) => await api.get(`/users?${queryString}`);
 export const getTenants = async (queryString: string) => await api.get('/tenants?' + queryString);
 export const createUser = async ( user: CreateUserData) => await api.post('/users', user);
+export const updateUser = async (user: CreateUserData, id: string) => await api.patch(`/users/${id}`, user);
 export const createTenant = async (tenant: CreateTenantData) => await api.post('/tenants', tenant);

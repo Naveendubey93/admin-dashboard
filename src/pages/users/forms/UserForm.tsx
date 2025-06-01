@@ -3,14 +3,14 @@ import { getTenants } from '../../../http/api';
 import { useQuery } from '@tanstack/react-query';
 import { Tenant } from '../../../types';
 
-const UserForm = () => {
+const UserForm = ({isEditMode= false}: { isEditMode: boolean}) => {
     const {
     data: tenants,
 
   } = useQuery({
     queryKey: ['tenants'],
     queryFn: () => {
-      return getTenants()
+      return getTenants(`perPage=10&currentPage=1`)
         .then((res) => {
          return res.data?.data;       // Fix here if data is wrapped
         })
@@ -43,20 +43,23 @@ const UserForm = () => {
                 </Col>
             </Row>
           </Card>
-          <Card title="Security Info" bordered={false}>
-            <Row gutter={20}>
-              <Col span={12}>
-                <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please input your password!' }]}>
-                  <Input.Password size='large'/>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Confirm Password" name="confirmPassword" rules={[{ required: true, message: 'Please confirm your password!' }]}>
-                  <Input.Password size='large'/>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
+          {!isEditMode && (
+            <Card title="Security Info" bordered={false}>
+              <Row gutter={20}>
+                <Col span={12}>
+                  <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please input your password!' }]}>
+                    <Input.Password size='large'/>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item label="Confirm Password" name="confirmPassword" rules={[{ required: true, message: 'Please confirm your password!' }]}>
+                    <Input.Password size='large'/>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+          )}
+
           <Card title="Role" bordered={false}>
             <Row gutter={20}>
               <Col span={12}>
@@ -70,7 +73,7 @@ const UserForm = () => {
               </Col>
                <Col span={12}>
                 <Form.Item label="Restaurant" name="tenantId">
-                  <Select size='large' style={{width: '100%'}} allowClear={true} placeholder='Select Restaturent' onChange={() => {}}>
+                  <Select id='selectBoxInUserForm' size='large' style={{width: '100%'}} allowClear={true} placeholder='Select Restaturent' onChange={() => {}}>
                     {
                       tenants?.map((tenant: Tenant) => (
                         <Select.Option key={tenant.id} value={tenant.id}>

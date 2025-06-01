@@ -1,57 +1,49 @@
-import { Breadcrumb, Button, Drawer, Space, Table, theme , Form, Spin, Flex} from 'antd';
-import { LoadingOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
-import {  Link, Navigate } from 'react-router-dom';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createUser, getUsers } from '../../http/api';
-import { CreateUserData, FieldData, User } from '../../types';
+import {
+  Breadcrumb, Button, Drawer, Space, Table, theme, Form, Spin, Flex
+} from 'antd';
+import {
+  LoadingOutlined, PlusOutlined, RightOutlined
+} from '@ant-design/icons';
+import {
+  Link, Navigate
+} from 'react-router-dom';
+import {
+  keepPreviousData, useMutation, useQuery, useQueryClient
+} from '@tanstack/react-query';
+import {
+  createUser, getUsers, updateUser
+} from '../../http/api';
+import {
+  CreateUserData, FieldData, User
+} from '../../types';
 import { useAuthStore } from '../../store';
 import UsersFilter from './UsersFilter';
 import React from 'react';
 import UserForm from './forms/UserForm';
-import {  PER_PAGE } from '../constants';
+import { PER_PAGE } from '../constants';
 import { debounce } from 'lodash';
 
 const columns = [
-  {
-    title: 'ID',
-    dataIndex: 'id',
-    key: 'id',
-  },
-  {
-    title: 'First Name',
-    dataIndex: 'firstName',
-    key: 'firstName',
-  },
-  {
-    title: 'Last Name',
-    dataIndex: 'lastName',
-    key: 'lastName',
-  },
-  {
-    title: 'Email',
-    dataIndex: 'email',
-    key: 'email',
-  },
-  {
-    title: 'Role',
-    dataIndex: 'role',
-    key: 'role',
-  },
+  { title: 'ID', dataIndex: 'id', key: 'id' },
+  { title: 'First Name', dataIndex: 'firstName', key: 'firstName' },
+  { title: 'Last Name', dataIndex: 'lastName', key: 'lastName' },
+  { title: 'Email', dataIndex: 'email', key: 'email' },
+  { title: 'Role', dataIndex: 'role', key: 'role' },
   {
     title: 'Restaurant',
     dataIndex: 'tenant',
     key: 'tenant',
-    render: (_text: string, record: User) => {
-      return <div>{record.tenant?.name}</div>;
-    }
+    render: (_text: string, record: User) => <div>{record.tenant?.name}</div>
   }
 ];
 
 export const Users = () => {
   const [form] = Form.useForm();
   const [filterForm] = Form.useForm();
+
+  const [currentEditingUser, setCurrentEditingUser] = React.useState<User | null>(null);
   const queryClient = useQueryClient();
-  const { token : { colorBgLayout } } = theme.useToken();
+  const { token: { colorBgLayout } } = theme.useToken();
 
   const [queryParams, setQueryParams] = React.useState<{
     perPage: number;
@@ -62,138 +54,206 @@ export const Users = () => {
     perPage: PER_PAGE,
     currentPage: 1,
     q: undefined,
-    role: undefined,
+    role: undefined
   });
 
-  const [ drawerOpen, setDrawerOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (currentEditingUser) {
+      form.setFieldsValue({
+        ...currentEditingUser,
+        tenantId: currentEditingUser.tenant?.id
+      });
+      setDrawerOpen(true);
+    } else {
+      form.resetFields();
+    }
+  }, [currentEditingUser, form]);
+
   const { data: users, isFetching, isError, error } = useQuery({
     queryKey: ['users', queryParams],
-
     queryFn: () => {
-      const filterdParams = Object.fromEntries(Object.entries(queryParams).filter((Item) => !!Item[1]));
-      // const queryString = `?currentPage=${queryParams.currentPage}&perPage=${queryParams.perPage}&q=${queryParams.q || ''}&role=${queryParams.role || ''}`;
-     const queryString = new URLSearchParams(filterdParams as  unknown as Record<string, string>).toString();
+      const filteredParams = Object.fromEntries(Object.entries(queryParams).filter((Item) => !!Item[1]));
+      const queryString = new URLSearchParams(
+        filteredParams as Record<string, string>
+      ).toString();
       return getUsers(queryString)
-        .then((res) => {
-          return res.data;
-        })
-        .catch((error) => {
-          console.error("Error fetching users: ", error);
-          throw error;  // Re-throw the error so that `isError` can be set to true
+        .then((res) => res.data)
+        .catch((err) => {
+          console.error('Error fetching users:', err);
+          throw err;
         });
     },
     placeholderData: keepPreviousData
   });
-  console.log("Users Data: ", users);  // Log the users data here
 
-const CreateUser = async(credential: CreateUserData) => {
-  // server calling logic
-  const data = await createUser(credential);
-  return data;
-}
-
-  const { user } = useAuthStore();
-
-  const  { mutate: userMutate} = useMutation({
-    mutationKey: ['user'],
-    // mutationFn: async (data: CreateUserData) => await createUser(data).then((res) =>res.data),
-    mutationFn: CreateUser,
-    onSuccess: async () => {
-       queryClient.invalidateQueries({ queryKey: ['users'] });
-      // logoutFromStore();
+  const createUserMutation = useMutation({
+    mutationKey: ['create-user'],
+    mutationFn: async (data: CreateUserData) => {
+      const res = await createUser(data);
+      return res.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
   });
 
-  const onHandleSubmit = async () => {
-    await form.validateFields()
-    userMutate(form.getFieldsValue());
-    form.resetFields(); // Reset the form fields after submission
-    // If validation passes, you can access the form values here
-    console.log("Form Values: ", form.getFieldsValue());  // Log the form values here
-      setDrawerOpen(false); // Close the drawer after submission
-  }
+  const updateUserMutation = useMutation({
+    mutationKey: ['update-user'],
+    mutationFn: async (data: CreateUserData & { id: string }) => {
+      const res = await updateUser(data, data.id);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  const handleFormSubmit = async () => {
+    const isEditMode = !!currentEditingUser;
+    try {
+      await form.validateFields();
+    } catch (error) {
+      console.error("Form validation failed:", error);
+      return;
+    }
+
+    const formData = form.getFieldsValue();
+
+    if (isEditMode && currentEditingUser) {
+      updateUserMutation.mutate({...formData, id: currentEditingUser.id});
+    } else {
+      createUserMutation.mutate(formData);
+      console.log("Creating New User");
+    }
+
+    form.resetFields();
+    setDrawerOpen(false);
+    setCurrentEditingUser(null);
+
+  };
 
   const debounceQUpdate = React.useMemo(() => {
     return debounce((value: string | undefined) => {
       setQueryParams((prev) => ({ ...prev, q: value, currentPage: 1 }));
-  },500);
+    }, 500);
   }, []);
 
-  const onFIlterChange = (changedValue: FieldData[]) => {
-    // const values = filterForm.getFieldsValue();
-    console.log("Filter Values: ", changedValue);  // Log the filter values here
-    const changedFilterFileds = changedValue.reduce((acc: Record<string, unknown>, field) => {
+  React.useEffect(() => {
+    return () => {
+      debounceQUpdate.cancel();
+    };
+  }, [debounceQUpdate]);
+
+  const onFilterChange = (changedValue: FieldData[]) => {
+    const changedFields = changedValue.reduce((acc: Record<string, unknown>, field) => {
       if (field.value !== undefined && field.value !== null) {
         acc[field.name] = field.value;
       }
       return acc;
-    }, {} as Record<string, unknown>);
-    console.log("Changed Filter Fields: ", changedFilterFileds);  // Log the changed filter fields here
-   if('q' in changedFilterFileds) {
-      debounceQUpdate(changedFilterFileds.q as string | undefined);
+    }, {});
+
+    if ('q' in changedFields) {
+      debounceQUpdate(changedFields.q as string | undefined);
     } else {
-    setQueryParams(prev => ({
-      ...prev,
-      ...changedFilterFileds
-    }));
+      setQueryParams((prev) => ({ ...prev, ...changedFields }));
     }
   };
 
+  const { user } = useAuthStore();
 
   if (user?.role !== 'admin') {
-    return <Navigate to='/' />;
+    return <Navigate to="/" />;
   }
 
   return (
-    <Space direction="vertical" size='large' style={{ width: '100%' }}>
-      <Flex justify='space-between' >
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Flex justify="space-between">
         <Breadcrumb
           separator={<RightOutlined />}
-          items={[{ title: <Link to='/'>Dashboard</Link> }, { title: 'Users' }]}
+          items={[
+            { title: <Link to="/">Dashboard</Link> },
+            { title: 'Users' }
+          ]}
         />
-        {isFetching && <div>  <Spin indicator={<LoadingOutlined style={{fontSize:24}} spin  />} size="small" /></div>}
+        {isFetching && (
+          <Spin
+            indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}
+            size="small"
+          />
+        )}
         {isError && <div>{error?.message || 'An error occurred'}</div>}
       </Flex>
-      <Form form={filterForm} onFieldsChange={onFIlterChange}>
+
+      <Form form={filterForm} onFieldsChange={onFilterChange}>
         <UsersFilter>
-        <Button type='primary' icon={<PlusOutlined/>}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
             onClick={() => setDrawerOpen(true)}
-            >Add User</Button>
+          >
+            Add User
+          </Button>
         </UsersFilter>
       </Form>
 
-
       <Table
-        columns={columns}
-
-        // dataSource={Array.isArray(users) ? users : []}
-        dataSource={users?.users} // Ensure this is the correct path to your users data
-        rowKey="id" // Ensure there's a unique key for each row
+        columns={[
+          ...columns,
+          {
+            title: 'Actions',
+            key: 'actions',
+            render: (_text: string, record: User) => (
+              <Button type="link" onClick={() => setCurrentEditingUser(record)}>
+                Edit
+              </Button>
+            )
+          }
+        ]}
+        dataSource={users?.users || []}
+        rowKey="id"
         pagination={{
           pageSize: queryParams.perPage,
           current: queryParams.currentPage,
-          total: users?.count, // Ensure this is the correct path to your total count
-          // showSizeChanger: true,
-            onChange: (page) => setQueryParams(prev => ({ ...prev, currentPage: page })),
-            showTotal: (total, range: number[]) => `Showing ${range[0]} - ${range[1]} of Total ${total} users`,
+          total: users?.count || 0,
+          onChange: (page) =>
+            setQueryParams((prev) => ({ ...prev, currentPage: page })),
+          showTotal: (total, range: number[]) =>
+            `Showing ${range[0]} - ${range[1]} of Total ${total} users`
         }}
-
       />
+
       <Drawer
-        title="Create user" width={720} destroyOnClose={true}
+        title={currentEditingUser ? 'Edit User' : 'Create User'}
+        width={720}
+        destroyOnClose
         style={{ background: colorBgLayout }}
-        open={drawerOpen} onClose={() => {
-            setDrawerOpen(false)        }}
+        open={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          setCurrentEditingUser(null);
+        }}
         extra={
           <Space>
-            <Button>Cancel</Button>
-            <Button onClick={onHandleSubmit} type='primary' icon={<PlusOutlined/>}
-            >Submit</Button>
+            <Button onClick={() => {
+              setDrawerOpen(false);
+              setCurrentEditingUser(null);
+            }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleFormSubmit}
+              type="primary"
+              icon={<PlusOutlined />}
+            >
+              Submit
+            </Button>
           </Space>
-
-        }>
-        <Form layout='vertical' form={form}>
-          <UserForm />
+        }
+      >
+        <Form layout="vertical" form={form}>
+          <UserForm isEditMode={!!currentEditingUser} />
         </Form>
       </Drawer>
     </Space>
