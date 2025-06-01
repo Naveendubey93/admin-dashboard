@@ -1,11 +1,11 @@
-import {  Navigate, NavLink, Outlet } from 'react-router-dom'
+import {  Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store'
 import {  Avatar, Badge, Dropdown, Flex, Layout, Menu, Space, theme } from 'antd';
 import Icon, {  BellFilled, UserOutlined } from '@ant-design/icons'; 
 
 import Sider from 'antd/es/layout/Sider';
 import { Content, Footer, Header } from 'antd/es/layout/layout';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Logo from '../components/icons/logo';
 import Home from '../components/icons/Home';
 import { foodIcon } from '../components/icons/FoodIcon';
@@ -49,13 +49,13 @@ const getMeuItems = (role: string) => {
         label: <NavLink to="/users">User</NavLink>,
       });
       return menus;
-  } 
+  }
 
   return baseItems;
 };
 
 const Dashboard = () => {
-
+ const location = useLocation();
   const { logout: logoutFromStore} = useAuthStore();
   const {mutate: logoutMutate } = useMutation({
   mutationKey: ['logout'],
@@ -73,7 +73,7 @@ const Dashboard = () => {
 
 const { user } = useAuthStore();
 if(!user) {
-  return <Navigate to="/auth/login" replace={true} />;
+  return <Navigate to={`/auth/login?returnTo=${location.pathname}`} replace={true} />;
 }
   const items = getMeuItems(user.role );
 
@@ -96,7 +96,6 @@ if(!user) {
               <Space size={16}>
                 <Badge dot={true}>
                   <BellFilled/>
-               
                 </Badge>
                    <Dropdown menu={{ items: [
                     { key: 'logout', label: 'Logout', onClick:() => logoutMutate(),}
@@ -111,19 +110,17 @@ if(!user) {
           <Outlet/>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Fullstack test application       
+          Fullstack test application
         </Footer>
         </Layout>
-      
         {/* <Layout>
           <Header style={{ padding: 0, background: colorBgContainer }} />
             <Content style={{ margin: '0 16px' }}>
             <Outlet/>
 
             </Content>
-          
         </Layout> */}
-      </Layout>      
+      </Layout>
     </div>
   )
 }
