@@ -87,7 +87,7 @@ if(!user) {
           <div className="logo">
             <Logo/>
             </div>
-          <Menu theme="light" defaultSelectedKeys={['/']} mode="inline" items={items} />
+          <Menu theme="light" defaultSelectedKeys={[location.pathname]} mode="inline" items={items} />
         </Sider>
         <Layout>
           <Header style={{ paddingLeft: '16px', paddingRight: '16px', background: colorBgContainer}}>
