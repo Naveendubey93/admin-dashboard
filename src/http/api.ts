@@ -17,3 +17,4 @@ export const createTenant = async (tenant: CreateTenantData) => await api.post(`
 
 //  Catelog Service
 export const getCategories = async (queryString: string) => await api.get(`${CATELOG_SERVICE}/categories?` + queryString);
+export const getProducts = (queryparams: string) => api.get(`${CATELOG_SERVICE}/products?${queryparams}`);
