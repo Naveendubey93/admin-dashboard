@@ -10,14 +10,14 @@ const ProductsFilter = ({children}: ProductFilterProps) => {
   const { data: restaurants} = useQuery({
     queryKey: ['restaurants'],
     queryFn: () => {
-     return getTenants(`?perPage=1000&currentPage=1`)
+     return getTenants(`?limit=1000&page=1`)
     },
   });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => {
-      return getCategories(`?perPage=1000&currentPage=1`)
+      return getCategories(`?limit=1000&page=1`)
     },
   });
   console.log(categories?.data);
@@ -31,7 +31,7 @@ const ProductsFilter = ({children}: ProductFilterProps) => {
             </Form.Item>
           </Col>
           <Col span={6}>
-          <Form.Item name='category'>
+          <Form.Item name='categoryId'>
             <Select style={{width: '100%'}}  placeholder='Select Category' allowClear={true} >
                 {categories?.data?.map((category: Category) => (
                   <Select.Option key={category._id} value={category._id}>
@@ -42,7 +42,7 @@ const ProductsFilter = ({children}: ProductFilterProps) => {
           </Form.Item>
           </Col>
           <Col span={6}>
-            <Form.Item name='restaurant'>
+            <Form.Item name='tenantId'>
               <Select style={{width: '100%'}} placeholder='Select Restaurant' allowClear={true}>
                 {restaurants?.data?.data?.map((restaurant: Tenant) => (
                   <Select.Option key={restaurant.id} value={restaurant.id}>
@@ -52,7 +52,11 @@ const ProductsFilter = ({children}: ProductFilterProps) => {
               </Select>
             </Form.Item>
           </Col>
-          <Col span={7}><Space><Switch  defaultChecked onChange={()=>{}}/> <Typography.Text>Show Only Published</Typography.Text></Space></Col>
+          <Col span={7}><Space>
+          <Form.Item name='isPublish'>
+            <Switch  defaultChecked={false} onChange={()=>{}}/>
+           </Form.Item>
+            <Typography.Text>Show Only Published</Typography.Text></Space></Col>
          </Row>
       </Col>
       <Col span={6} style={{ display: 'flex', justifyContent: 'flex-end' }}>
