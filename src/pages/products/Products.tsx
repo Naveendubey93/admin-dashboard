@@ -9,6 +9,7 @@ import React from 'react';
 import { PER_PAGE } from '../constants';
 import { format } from 'date-fns'
 import { debounce } from 'lodash';
+import { useAuthStore } from '../../store';
 const columns = [
   { title: 'Product Name', dataIndex: 'name', key: 'name' ,
     render: (_text: string, record: Product) => {
@@ -41,18 +42,17 @@ const columns = [
 
 const Products = () => {
   const [filterForm] = Form.useForm();
+  const {user} = useAuthStore();
     const [queryParams, setQueryParams] = React.useState<{
       limit: number;
       page: number;
       q?: string;
-      role?: string;
-      isPublish: boolean,
+      tenantId?: number | undefined,
     }>({
       limit: PER_PAGE,
       page: 1,
-      isPublish: false,
       q: undefined,
-      role: undefined
+      tenantId: user?.role === 'manager' ? user?.tenant?.id : undefined
     });
 
 
