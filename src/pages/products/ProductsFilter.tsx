@@ -34,7 +34,7 @@ const ProductsFilter = ({children}: ProductFilterProps) => {
           <Form.Item name='category'>
             <Select style={{width: '100%'}}  placeholder='Select Category' allowClear={true} >
                 {categories?.data?.map((category: Category) => (
-                  <Select.Option key={category.id} value={category.id}>
+                  <Select.Option key={category._id} value={category._id}>
                     {category.name}
                   </Select.Option>
                 ))}
