@@ -33,7 +33,13 @@ export type CreateTenantData = {
   address: string;
   createdAt: string;
 }
+
 export type FieldData = {
   name: string;
   value?: string | number | boolean;
+}
+
+export type Category = {
+  _id: string;
+  name: string;
 }
