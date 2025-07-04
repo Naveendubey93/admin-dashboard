@@ -16,11 +16,11 @@ const Root = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['self'],
     queryFn: getSelf,
-    retry: (failureCount:number, error) => {
+    retry: (failureCount: number, error) => {
       if (error instanceof AxiosError && error.response?.status === 401) {
         return false;
       }
-      return failureCount < 3  
+      return failureCount < 3
     }
   });
 

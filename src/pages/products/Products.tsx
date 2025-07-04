@@ -1,4 +1,4 @@
-import { Breadcrumb, Button, Flex, Space, Spin, Form, Table, Image, Tag, Typography } from 'antd'
+import { Breadcrumb, Button, Flex, Space, Spin, Form, Table, Image, Tag, Typography, Drawer, theme } from 'antd'
 import { LoadingOutlined, PlusOutlined, RightOutlined} from '@ant-design/icons';
 import {  Link } from 'react-router-dom';
 import ProductsFilter from './ProductsFilter';
@@ -10,6 +10,7 @@ import { PER_PAGE } from '../constants';
 import { format } from 'date-fns'
 import { debounce } from 'lodash';
 import { useAuthStore } from '../../store';
+import ProductForm from './forms/ProductForm';
 const columns = [
   { title: 'Product Name', dataIndex: 'name', key: 'name' ,
     render: (_text: string, record: Product) => {
@@ -41,20 +42,22 @@ const columns = [
 ];
 
 const Products = () => {
+  const {token: {colorBgLayout}} = theme.useToken();
+  const [form] = Form.useForm()
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [filterForm] = Form.useForm();
   const {user} = useAuthStore();
     const [queryParams, setQueryParams] = React.useState<{
       limit: number;
       page: number;
       q?: string;
-      tenantId?: number | undefined,
+      tenantId?: number,
     }>({
       limit: PER_PAGE,
       page: 1,
       q: undefined,
       tenantId: user?.role === 'manager' ? user?.tenant?.id : undefined
     });
-
 
     const { data: products, isFetching, isError, error } = useQuery({
     queryKey: ['products', queryParams],
@@ -94,8 +97,10 @@ const Products = () => {
     }
   };
 
-  function setCurrentEditingUser(record: Product): void {
-    throw new Error(`Function not implemented. ${JSON.stringify(record)}`);
+
+
+  const handleFormSubmit = () => {
+    console.log('submitting...');
   }
 
   return (
@@ -121,7 +126,7 @@ const Products = () => {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => {}}
+            onClick={() => setDrawerOpen(true)}
           >
             Add Product
           </Button>
@@ -136,7 +141,7 @@ const Products = () => {
             title: 'Actions',
             key: 'actions',
             render: (_text: string, record: Product) => (
-              <Button type="link" onClick={() => setCurrentEditingUser(record)}>
+              <Button type="link" onClick={() => ({})}>
                 Edit
               </Button>
             )
@@ -156,8 +161,40 @@ const Products = () => {
           },
         }}
       />
-
+    <Space>
+      <Drawer
+        title={'Add Product'}
+        width={720}
+        destroyOnClose
+        style={{ background: colorBgLayout }}
+        open={drawerOpen}
+        onClose={() => {
+          form.resetFields();
+          setDrawerOpen(false);
+        }}
+        extra={
+          <Space>
+            <Button onClick={() => {
+              setDrawerOpen(false);
+            }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleFormSubmit}
+              type="primary"
+              icon={<PlusOutlined />}
+            >
+              Submit
+            </Button>
+          </Space>
+        }
+      >
+        <Form layout="vertical" form={form}>
+          <ProductForm />
+        </Form>
+      </Drawer>
     </Space>
+  </Space>
   )
 }
 
