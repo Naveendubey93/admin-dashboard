@@ -1,8 +1,7 @@
-import { Button, Card, Col, Form, Input, Row, Select, Space, Switch, Typography, Upload } from 'antd'
+import {  Card, Col, Form, Input, Row, Select, Space, Switch, Typography, Upload } from 'antd'
 import { Category, Tenant } from '../../../types'
 import { getCategories, getTenants } from '../../../http/api';
 import { useQuery } from '@tanstack/react-query';
-// import { Tenant } from '../../../types'
 import {PlusOutlined} from '@ant-design/icons'
 import { Pricing } from './Pricing';
 import { Attributes } from './Attributes';
@@ -107,7 +106,7 @@ const ProductForm = () => {
           }
 
           {
-            selectedCategory && <Attributes/>
+            selectedCategory && <Attributes selectedCategory={selectedCategory}/>
           }
 
           <Card title="Other Properties" bordered={false}>

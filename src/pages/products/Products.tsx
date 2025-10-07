@@ -140,7 +140,7 @@ const Products = () => {
           {
             title: 'Actions',
             key: 'actions',
-            render: (_text: string, record: Product) => (
+            render: () => (
               <Button type="link" onClick={() => ({})}>
                 Edit
               </Button>
